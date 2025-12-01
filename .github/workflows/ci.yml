@@ -2,23 +2,33 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y build-essential g++ make
+      - name: Install Tools
+        run: sudo apt-get update && sudo apt-get install -y cmake g++
+
+      - name: Configure (CMake)
+        run: |
+          mkdir -p build
+          cd build
+          cmake -DBUILD_TESTS=ON ..
 
       - name: Build
-        run: make -j$(nproc)
+        run: |
+          cd build
+          cmake --build . -- -j$(nproc)
 
       - name: Run tests
-        run: make test
-
+        run: |
+          cd build
+          ctest --output-on-failure -j1
